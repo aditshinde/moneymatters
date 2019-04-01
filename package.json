@@ -18,5 +18,9 @@
   "bugs": {
     "url": "https://github.com/aditshinde/moneymatters/issues"
   },
-  "homepage": "https://github.com/aditshinde/moneymatters#readme"
+  "homepage": "https://github.com/aditshinde/moneymatters#readme",
+  "dependencies": {
+    "fastify": "^2.1.0",
+    "mongodb": "^3.2.2"
+  }
 }

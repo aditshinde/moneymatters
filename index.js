@@ -2,6 +2,7 @@ const app = require('fastify')({
     logger: true
 });
 const fs = require('fs');
+const dao = require('./dao.js');
 
 app.get('/', async (request, reply) => {
   return { "statusCode":200, "error":null, "message":"Welcome to Money Matters", data: null }
@@ -30,6 +31,17 @@ app.get('/nav/load',(req,res)=>{
     else{
         res.send({ "statusCode":500, "error":"NAV data loading failed", "message":"NAV data loading failed", data: null })
     }
+    });
+});
+
+app.get('/nav/update',(req,res)=>{
+    dao.update((err)=>{
+        if(err){
+            res.send({ "statusCode":500, "error":"NAV data update failed", "message":"NAV data update failed", data: null })
+        }
+        else{
+            res.send({ "statusCode":200, "error":"NAV data updated", "message":"NAV data updated", data: null });
+        }
     });
 });
 
