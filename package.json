@@ -1,0 +1,22 @@
+{
+  "name": "moneymatters",
+  "version": "1.0.0",
+  "description": "All money matters. Money really really really matters.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aditshinde/moneymatters.git"
+  },
+  "keywords": [
+    "money"
+  ],
+  "author": "aditdineshshinde@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aditshinde/moneymatters/issues"
+  },
+  "homepage": "https://github.com/aditshinde/moneymatters#readme"
+}
