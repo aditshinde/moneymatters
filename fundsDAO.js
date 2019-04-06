@@ -56,4 +56,17 @@ function findAllForDate(date,callback){
     });
 }
 
-module.exports = {findAllForDate,update}
+function findByIdsForDate({ids,date},callback){
+    MongoClient.connect(url,(err, db)=>{
+        if (err){callback(err,null);}
+        const dbo = db.db(DBNAME);
+        const today = date || new Date().toISOString().substr(0,10);
+        dbo.collection("funds-"+today).find({'_id':{'$in':ids}}).toArray((err,funds)=>{
+            if(err){callback(err,null)}
+            callback(null,funds);
+            db.close();
+        });
+    });
+}
+
+module.exports = {findAllForDate,findByIdsForDate,update}
