@@ -12,12 +12,13 @@ app.get('/', async (request, reply) => {
   return { "statusCode":200, "error":null, "message":"Welcome to Money Matters", data: null }
 });
 
-app.get('/nav/view', (request, reply) => {
-    fs.readFile('./nav.json',(err,data)=>{
-        if(data){
-            reply.send({ "statusCode":200, "error":null, "message":"NAV data", data: data.toString()});
+app.get('/nav/view/:date', (req, res) => {
+    fundsDAO.findAllForDate(req.params.date,(err,funds)=>{
+        if(err){
+            console.log(err);
+            res.send({ "statusCode":500, "error":null, "message":"NAV data not found", data: null });
         }
-        reply.send({ "statusCode":500, "error":null, "message":"NAV data not found", data: null });
+        res.send({ "statusCode":200, "error":null, "message":"NAV data", data: funds});
     });
 });
 

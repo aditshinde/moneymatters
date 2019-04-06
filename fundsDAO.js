@@ -1,7 +1,8 @@
 const https = require('https')
 const MongoClient = require('mongodb').MongoClient;
 const url = "mongodb://localhost:27017/";
-const NAV_URL = 'https://www.amfiindia.com/spages/NAVAll.txt'
+const DBNAME = "moneymatters";
+const NAV_URL = 'https://www.amfiindia.com/spages/NAVAll.txt';
 
 function update(callback){
     https.get(NAV_URL,(res)=>{
@@ -30,7 +31,7 @@ function update(callback){
             });
             MongoClient.connect(url,(err, db)=>{
                 if (err) callback(err);
-                const dbo = db.db("moneymatters");
+                const dbo = db.db(DBNAME);
                 const today = new Date().toISOString().substr(0,10);
                 dbo.collection("funds-"+today).insertMany(funds,(err)=>{
                     if (err){callback(err);}
@@ -42,4 +43,17 @@ function update(callback){
     });
 }
 
-module.exports = {update}
+function findAllForDate(date,callback){
+    MongoClient.connect(url,(err, db)=>{
+        if (err){callback(err,null);}
+        const dbo = db.db(DBNAME);
+        const today = date || new Date().toISOString().substr(0,10);
+        dbo.collection("funds-"+today).find({}).toArray((err,funds)=>{
+            if(err){callback(err,null)}
+            callback(null,funds);
+            db.close();
+        });
+    });
+}
+
+module.exports = {findAllForDate,update}
