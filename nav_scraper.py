@@ -1,3 +1,6 @@
+'''
+A util that will save NAV as json file.
+'''
 import urllib.request
 import logging
 logging.basicConfig(level=logging.INFO)

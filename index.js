@@ -1,8 +1,12 @@
+/*
+Create a lightweight webserver that can handle REST API calls
+for loading and viewing funds
+*/
 const app = require('fastify')({
     logger: true
 });
 const fs = require('fs');
-const dao = require('./dao.js');
+const fundsDAO = require('./fundsDAO.js');
 
 app.get('/', async (request, reply) => {
   return { "statusCode":200, "error":null, "message":"Welcome to Money Matters", data: null }
@@ -11,9 +15,9 @@ app.get('/', async (request, reply) => {
 app.get('/nav/view', (request, reply) => {
     fs.readFile('./nav.json',(err,data)=>{
         if(data){
-            reply.send({ "statusCode":200, "error":null, "message":"NAV data", data: data.toString() });
+            reply.send({ "statusCode":200, "error":null, "message":"NAV data", data: data.toString()});
         }
-        reply.send({ "statusCode":500, "error":"NAV data not found", "message":"NAV data not found", data: null });
+        reply.send({ "statusCode":500, "error":null, "message":"NAV data not found", data: null });
     });
 });
 
@@ -29,18 +33,19 @@ app.get('/nav/load',(req,res)=>{
         res.send({ "statusCode":200, "error":"NAV data loaded", "message":"NAV data loaded", data: null });
     }
     else{
-        res.send({ "statusCode":500, "error":"NAV data loading failed", "message":"NAV data loading failed", data: null })
+        res.send({ "statusCode":500, "error":null, "message":"NAV data loading failed", data: null })
     }
     });
 });
 
 app.get('/nav/update',(req,res)=>{
-    dao.update((err)=>{
+    fundsDAO.update((err)=>{
         if(err){
+            console.log(err);
             res.send({ "statusCode":500, "error":"NAV data update failed", "message":"NAV data update failed", data: null })
         }
         else{
-            res.send({ "statusCode":200, "error":"NAV data updated", "message":"NAV data updated", data: null });
+            res.send({ "statusCode":200, "error":null, "message":"NAV data updated", data: null });
         }
     });
 });
