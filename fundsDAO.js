@@ -7,7 +7,7 @@ function update(callback){
     https.get(NAV_URL,(res)=>{
         let nav_data = '';
         res.on('error',(err)=>{
-            callback(err);
+            return callback(err);
         });
         res.on('data',(data)=>{
             nav_data += data.toString();        
@@ -19,22 +19,23 @@ function update(callback){
                 fund = {}
                 if(line.trim()){
                     words = line.split(';')
-                    fund['code'] = words[0]
-                    fund['name'] = words[3]
-                    fund['nav'] = words[4]
-                    fund['date'] = words[5]
-                    funds.push(fund);
+                    if(!isNaN(parseInt(words[0]))){
+                        fund['_id'] = words[0]
+                        fund['name'] = words[3]
+                        fund['nav'] = words[4]
+                        fund['date'] = words[5]
+                        funds.push(fund);
+                    }
                 }
             });
-            MongoClient.connect(url, function(err, db) {
+            MongoClient.connect(url,(err, db)=>{
                 if (err) callback(err);
                 const dbo = db.db("moneymatters");
                 const today = new Date().toISOString().substr(0,10);
-                dbo.collection("funds-"+today).drop();
-                dbo.collection("funds-"+today).insertMany(funds, function(err) {
-                    if (err) callback(err);
+                dbo.collection("funds-"+today).insertMany(funds,(err)=>{
+                    if (err){callback(err);}
                     db.close();
-                    callback(null);
+                    return callback(null);
                 });
             });
         });
