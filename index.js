@@ -8,6 +8,12 @@ const app = require('fastify')({
 const fs = require('fs');
 const fundsDAO = require('./fundsDAO.js');
 const usersDAO = require('./usersDAO.js');
+const path = require('path')
+
+app.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/', // optional: default '/'
+})
 
 app.get('/', async (request, reply) => {
   return { "statusCode":200, "error":null, "message":"Welcome to Money Matters", data: null }
@@ -31,6 +37,28 @@ app.get('/mf/search/:name', (req, res) => {
             res.send({ "statusCode":500, "error":"NAV data not found", "message":null, data: null });
         }
         res.send({ "statusCode":200, "error":null, "message":"NAV data", data: funds});
+    });
+});
+
+app.get('/mf/download/:user', (req, res) => {
+    username = req.params.user;
+    usersDAO.findUser(username,(err,user)=>{
+        if(err){
+            console.log(err);
+            res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+        }
+        if(!user.funds || (user.funds && user.funds.length == 0)){
+            res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+        }
+        const csv = require('json2csv').parse(user.funds);
+        const fs = require('fs');
+        fs.writeFile('./public/download/'+username+'.csv',csv,(err)=>{
+            if(err){
+                console.log(err);
+                res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+            }
+            res.sendFile('./download/'+username+'.csv');
+        });
     });
 });
 
@@ -65,6 +93,7 @@ app.get('/mf/stats/:user',(req,res)=>{
                             const tmp = funds[i];
                             if(fund.code == tmp._id){
                                 fund['currNav'] = tmp.nav;
+                                fund['name'] = tmp.name;
                                 fund['oldValue'] = fund['oldNav'] * fund['units'];
                                 fund['currValue'] = fund['currNav'] * fund['units'];
                                 fund['pnl'] = fund['currValue'] - fund['oldValue'];

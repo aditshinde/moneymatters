@@ -22,6 +22,8 @@
   "homepage": "https://github.com/aditshinde/moneymatters#readme",
   "dependencies": {
     "fastify": "^2.1.0",
+    "fastify-static": "^2.4.0",
+    "json2csv": "^4.4.1",
     "mongodb": "^3.2.2"
   }
 }
