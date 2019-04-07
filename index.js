@@ -33,40 +33,46 @@ app.get('/mf/stats/:user',(req,res)=>{
         const today = new Date().toISOString().substr(0,10);
         if((user.mfValueDate && user.mfValueDate === today) || !user.funds || user.funds.length==0){
             res.send({ "statusCode":200, "error":null, "message":"User data", data: user});
-        }else{
-        fundCodes = []
-        user.funds.forEach(fund => {
-            fundCodes.push(fund.code);
-        });
-        fundsDAO.findByIdsForDate({'ids':fundCodes},(err,funds)=>{
-            if(err){
-                console.log(err);
-                res.send({ "statusCode":500, "error":"User data not found", "message":null, data: null });
-            }
-            currValueFunds = []
+        }
+        else{
+            fundCodes = []
             user.funds.forEach(fund => {
-                for (let i = 0; i < funds.length; i++) {
-                    const tmp = funds[i];
-                    if(fund.code == tmp._id){
-                        fund['currNav'] = tmp.nav;
-                        fund['oldValue'] = fund['oldNav'] * fund['units'];
-                        fund['currValue'] = fund['currNav'] * fund['units'];
-                        fund['pnl'] = fund['currValue'] - fund['oldValue'];
-                        fund['change'] = ( fund['pnl'] / fund['oldValue'] ) * 100;
-                        currValueFunds.push(fund);
-                    }                    
-                }
+                fundCodes.push(fund.code);
             });
-            user.funds = currValueFunds;
-            //TODO: add valuation date to limit number of calls to db
-            usersDAO.updateFundsForUser({username,'funds':currValueFunds},(err,result)=>{
+            fundsDAO.findByIdsForDate({'ids':fundCodes},(err,funds)=>{
                 if(err){
                     console.log(err);
                     res.send({ "statusCode":500, "error":"User data not found", "message":null, data: null });
                 }
-                res.send({ "statusCode":200, "error":null, "message":"User data", data: user});
+                if(!funds || (funds && funds.length == 0 )){
+                    res.send({ "statusCode":200, "error":null, "message":"User data", data: user});
+                }
+                else{
+                    currValueFunds = []
+                    user.funds.forEach(fund => {
+                        for (let i = 0; i < funds.length; i++) {
+                            const tmp = funds[i];
+                            if(fund.code == tmp._id){
+                                fund['currNav'] = tmp.nav;
+                                fund['oldValue'] = fund['oldNav'] * fund['units'];
+                                fund['currValue'] = fund['currNav'] * fund['units'];
+                                fund['pnl'] = fund['currValue'] - fund['oldValue'];
+                                fund['change'] = ( fund['pnl'] / fund['oldValue'] ) * 100;
+                                currValueFunds.push(fund);
+                            }                    
+                        }
+                    });
+                    user.funds = currValueFunds;
+                    //TODO: add valuation date to limit number of calls to db
+                    usersDAO.updateFundsForUser({username,'funds':currValueFunds},(err,result)=>{
+                        if(err){
+                            console.log(err);
+                            res.send({ "statusCode":500, "error":"User data not found", "message":null, data: null });
+                        }
+                        res.send({ "statusCode":200, "error":null, "message":"Valuation data", data: user});
+                    });
+                }
             });
-        });
         }
     });
 });
