@@ -23,6 +23,17 @@ app.get('/mf/view/:date', (req, res) => {
     });
 });
 
+app.get('/mf/search/:name', (req, res) => {
+    name = req.params.name;
+    fundsDAO.findByNameForDate({name},(err,funds)=>{
+        if(err){
+            console.log(err);
+            res.send({ "statusCode":500, "error":"NAV data not found", "message":null, data: null });
+        }
+        res.send({ "statusCode":200, "error":null, "message":"NAV data", data: funds});
+    });
+});
+
 app.get('/mf/stats/:user',(req,res)=>{
     username = req.params.user
     usersDAO.findUser(username,(err,user)=>{

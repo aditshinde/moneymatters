@@ -69,4 +69,18 @@ function findByIdsForDate({ids,date},callback){
     });
 }
 
-module.exports = {findAllForDate,findByIdsForDate,update}
+function findByNameForDate({name,date},callback){
+    MongoClient.connect(url,(err, db)=>{
+        if (err){callback(err,null);}
+        const dbo = db.db(DBNAME);
+        const today = date || new Date().toISOString().substr(0,10);
+        const pattern = new RegExp(name);
+        dbo.collection("funds-"+today).find({'name':{$regex:pattern, $options:'i'}}).limit(10).toArray((err,funds)=>{
+            if(err){callback(err,null)}
+            callback(null,funds);
+            db.close();
+        });
+    });
+}
+
+module.exports = {findAllForDate,findByIdsForDate,findByNameForDate,update}
