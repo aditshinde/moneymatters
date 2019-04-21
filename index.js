@@ -15,10 +15,12 @@ app.register(require('fastify-static'), {
   prefix: '/public/', // optional: default '/'
 })
 
+//checks if the server is running fine
 app.get('/', async (request, reply) => {
   return { "statusCode":200, "error":null, "message":"Welcome to Money Matters", data: null }
 });
 
+//returns the mutual fund data for the date provided
 app.get('/mf/view/:date', (req, res) => {
     fundsDAO.findAllForDate(req.params.date,(err,funds)=>{
         if(err){
@@ -29,6 +31,7 @@ app.get('/mf/view/:date', (req, res) => {
     });
 });
 
+//returns the mutual fund data for name of the fund
 app.get('/mf/search/:name', (req, res) => {
     name = req.params.name;
     fundsDAO.findByNameForDate({name},(err,funds)=>{
@@ -40,6 +43,7 @@ app.get('/mf/search/:name', (req, res) => {
     });
 });
 
+//download the valuation data for user
 app.get('/mf/download/:user', (req, res) => {
     username = req.params.user;
     usersDAO.findUser(username,(err,user)=>{
@@ -62,6 +66,64 @@ app.get('/mf/download/:user', (req, res) => {
     });
 });
 
+//zip and email the valuation data for user
+app.get('/mf/email/:user', (req, res) => {
+
+    //Find user data from database
+    username = req.params.user;
+    usersDAO.findUser(username,(err,user)=>{
+        if(err){
+            console.log(err);
+            res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+        }
+        if(!user.funds || (user.funds && user.funds.length == 0)){
+            res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+        }
+
+        //Create CSV file from the data obtained
+        const csv = require('json2csv').parse(user.funds);
+        const fs = require('fs');
+        outputFile = './public/download/'+username+'.csv';
+        fs.writeFile(outputFile,csv,(err)=>{
+            if(err){
+                console.log(err);
+                res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+            }
+
+            //zip the CSV file
+            const zipper = require('./lib/zipper');
+            zipper.zipfile(outputFile,outputFile,(err,zippedFile)=>{
+                if(err){
+                    console.log(err);
+                    res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+                }
+
+                //mail the zipped file
+                const mailer = require('./lib/mailer');
+                mailer.sendMailWithAttachments({
+                    to: user.email,
+                    from: 'support@moneymatters.com',
+                    subject: 'Money Matters',
+                    text: 'Please find your details in the file attached.',
+                    html: '<strong>Please find your details in the file attached.</strong>',
+                    attachments: [{
+                      filename: username+'.csv.gz',
+                      content: fs.readFileSync(zippedFile).toString('base64')
+                    }]
+                  },(err,data)=>{
+                    if(err){
+                        console.log(err);
+                        res.send({ "statusCode":500, "error":"No fund data found", "message":null, data: null });
+                    }
+                    res.send({ "statusCode":200, "error":null, "message":"Email Sent", data: null });
+                  });
+            });
+        });
+    });
+});
+
+
+//return the user portfolio if present else calculate for current date
 app.get('/mf/stats/:user',(req,res)=>{
     username = req.params.user
     usersDAO.findUser(username,(err,user)=>{
@@ -117,6 +179,7 @@ app.get('/mf/stats/:user',(req,res)=>{
     });
 });
 
+//updates the mutual fund data for the run date
 app.get('/mf/update',(req,res)=>{
     fundsDAO.update((err)=>{
         if(err){
